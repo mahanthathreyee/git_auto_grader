@@ -1,5 +1,8 @@
 import csv
 
+import constants
+
+
 # region Constants
 STUDENT_ID_INDEX = 0
 STUDENT_NAME_INDEX = 1
@@ -20,8 +23,8 @@ class RoosterParser:
 
     def __add_student(self, student: list):
         student_id = student[STUDENT_ID_INDEX]
-        student_name = student[STUDENT_NAME_INDEX]
-        student_name = "".join(student_name.replace(',', '').split()).lower()
+        student_name = student[STUDENT_NAME_INDEX].lower()
+        student_name = student_name.translate(dict.fromkeys(map(ord, constants.STUDENT_NAME_EXCLUDE_CHARS)))
         self.__student_list[student_name] = student_id
 
     def get_student(self, student_name):

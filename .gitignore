@@ -1,3 +1,6 @@
 venv/
 .idea/
 input/
+student_validation.csv
+.DS_STORE
+__pycache__/
