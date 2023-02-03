@@ -11,6 +11,7 @@ from util.git_handler import GitHandler
 def process_student_submission():
     student_name = submission_zip.split(file_name_separator)[constants.FILE_STUDENT_NAME_INDEX]
     student_id = rooster.get_student(student_name)
+    print("Processing student: " + student_name + "(" + str(student_id) + ")")
 
     file_handler.extract_zip_file(submission_dir_location + '/' + submission_zip, output_dir)
     repo = GitHandler(output_dir)
@@ -22,10 +23,11 @@ def process_student_submission():
 
 
 def write_student_validation():
+    sorted_results = sorted(student_validation, key=lambda x:x[0])
     with open(constants.DEFAULT_VALIDATION_OUTPUT_FILE, 'w') as out_file:
         csvwriter = csv.writer(out_file)
         csvwriter.writerow(constants.OUTPUT_COLUMNS)
-        csvwriter.writerows(student_validation)
+        csvwriter.writerows(sorted_results)
 
 
 if __name__ == '__main__':
@@ -34,7 +36,7 @@ if __name__ == '__main__':
     file_name_separator = constants.DEFAULT_SUBMISSION_FILE_NAME_SEPARATOR
 
     rooster_file_location = sys.argv[1]
-    submission_dir_location = sys.argv[2]
+    submission_dir_location = os.getcwd() + '/' + sys.argv[2]
 
     rooster = RoosterParser(rooster_file_location)
     submission_list = file_handler.get_dir_files(submission_dir_location)

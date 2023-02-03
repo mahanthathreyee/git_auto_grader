@@ -20,7 +20,8 @@ class GitHandler:
         return self._git_init
 
     def __is_repo_dirty(self):
-        return self._git_init and not self._repo.is_dirty()
+        self._git_dirty = self._git_init and not self._repo.is_dirty(untracked_files=True)
+        return self._git_dirty
 
     def __file_check(self):
         if not self._git_init:
@@ -39,7 +40,10 @@ class GitHandler:
     def __get_commit_count(self):
         if not self._git_init:
             return -1
-        return len(list(self._repo.iter_commits()))
+        try:
+            return len(list(self._repo.iter_commits()))
+        except:
+            return -1
 
     def run_checks(self):
         return [self.__is_git_init(), self.__is_repo_dirty(), self.__file_check(), self.__get_commit_count()]

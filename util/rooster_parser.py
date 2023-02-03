@@ -29,3 +29,10 @@ class RoosterParser:
 
     def get_student(self, student_name):
         return self.__student_list.get(student_name, None)
+
+    def get_student_name_list(self):
+        return self.__student_list.keys()
+
+    def print_rooster(self):
+        for x, y in self.__student_list.items():
+            print(x, y)
