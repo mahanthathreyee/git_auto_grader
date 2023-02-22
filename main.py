@@ -12,6 +12,7 @@ import pathlib
 import util.TA as TA
 import zipfile
 import glob
+import shutil
 
 global counter
 counter = 1
@@ -32,17 +33,22 @@ def process_student_submission():
         file_handler.delete_dir(output_dir)
 
     student_row = [student_id, student_name] + checks
-    student_validation.append(student_row)
-
-    
+    student_validation[student_name] = student_row
 
 
 def write_student_validation():
-    sorted_results = sorted(student_validation, key=lambda x: x[1])
+    sorted_results = sorted(final_results, key=lambda x: x[1])
     with open(constants.DEFAULT_VALIDATION_OUTPUT_FILE, 'w') as out_file:
         csvwriter = csv.writer(out_file)
         csvwriter.writerow(constants.OUTPUT_COLUMNS)
         csvwriter.writerows(sorted_results)
+
+def merge_results():
+    for student in overallList:
+        if student:
+            student_name = student[0]
+            student_result = student_validation.get(student_name, []) + student[2:]
+            final_results.append(student_result)
 
 
 def A0_write_student_validation(filePath):
@@ -81,7 +87,7 @@ def grader(folder,f,studentDict):
                     file1.write(str(e))
                     file1.write("\n")
                     file1.write("\n")
-        return
+        return lst + [counter] + ([0] * 5)
     
     lst.append(counter)
     lst.append(str(style_deduction['frac_style_ded']))
@@ -91,14 +97,10 @@ def grader(folder,f,studentDict):
     lst.append(str(style_deduction['total_ded']))
     counter += 1
 
-    with open("/Users/adithya/Desktop/grades.csv", "a+",newline='') as file1:
-        csvwriter = csv.writer(file1)
-        csvwriter.writerow(lst)
-
-    return
+    return lst
 
 #------------------------------------------------------------------
-def runAutograder(folderPath,studentDict):
+def runAutograder(folderPath,studentDict,overallLst):
     p = pathlib.Path(folderPath)
     ctr = 0
     for f in p.iterdir():
@@ -109,35 +111,43 @@ def runAutograder(folderPath,studentDict):
             except:
                 print("Please Enable permissions")
                 print("Alternatively, Please create folders with names 'G0','G1'... so on in the submissions directory")
-        
         d = os.path.join(temp_folder_path, f)
         if os.path.isdir(d):
                 continue
-        
         try:
             with zipfile.ZipFile(f, 'r') as zip_ref:
                 zip_ref.extractall(temp_folder_path)
-        
-            depth = ''
             flag = False
-            for i in range(10):
-                for name in glob.glob(temp_folder_path + depth + '/*.py'):
+            shutil.move(f,temp_folder_path)
+            for name in glob.glob(temp_folder_path + '/*.py'):
+                #print(name)
+                flag = True
+                x = grader(name,f,studentDict)
+                overallLst.append(x)
+                break
+            if(not flag):
+                for name in glob.glob(temp_folder_path + '/**/*.py'):
                     #print(name)
-                    grader(name,f,studentDict)
                     flag = True
+                    x = grader(name,f,studentDict)
+                    overallLst.append(x)
                     break
-                depth = '/**' + depth
-
-            if not flag:   
-                with open("./fail_to_find_file.txt", "a+") as file1:
+            if(not flag):
+                for name in glob.glob(temp_folder_path + '/**/**/*.py'):
+                    #print(name)
+                    flag = True
+                    x = grader(name,f,studentDict)
+                    overallLst.append(x)
+                    break
+            if(not flag):
+                with open("fail_to_find_file.txt", "a+") as file1:
                     file1.write(str(f))
                     file1.write("\n")
                     file1.write(str(temp_folder_path))
                     file1.write("\n")
                     file1.write("\n")
-
-        except Exception as e: 
-            with open("./fail_to_unzip.txt", "a+") as file1:
+        except Exception as e:
+            with open("fail_to_unzip.txt", "a+") as file1:
                 file1.write(str(f))
                 file1.write("\n")
                 file1.write(str(temp_folder_path))
@@ -145,12 +155,15 @@ def runAutograder(folderPath,studentDict):
                 file1.write(str(e))
                 file1.write("\n")
                 file1.write("\n")
-
         ctr+=1
+    return overallLst
+
     
 
 if __name__ == '__main__':
-    student_validation = []
+    final_results = []
+    overallList = []
+    student_validation = {}
     output_dir = constants.DEFAULT_ZIP_EXTRACT_OUTPUT_DIR
     file_name_separator = constants.DEFAULT_SUBMISSION_FILE_NAME_SEPARATOR
 
@@ -164,7 +177,6 @@ if __name__ == '__main__':
         process_student_submission()
 
     os.chdir(constants.BASE_DIR)
-    write_student_validation()
 
     #Possible Code flow - Execute splitter to put into different groups 
     # Then execute git checker for each of the folders
@@ -175,5 +187,8 @@ if __name__ == '__main__':
         directory = "G"+str(i)
         #print(directoryPath)
         path = directoryPath + directory
-        runAutograder(path,studentDict)
+        overallList = runAutograder(path,studentDict,overallList)
         #break
+
+    merge_results()
+    write_student_validation()

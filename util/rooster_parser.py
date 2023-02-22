@@ -28,7 +28,7 @@ class RoosterParser:
         self.__student_list[student_name] = student_id
 
     def get_student(self, student_name):
-        return self.__student_list.get(student_name, None)
+        return self.__student_list.get(student_name, 'N/A')
 
     def get_student_name_list(self):
         return self.__student_list.keys()

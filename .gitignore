@@ -2,5 +2,9 @@ venv/
 .idea/
 input/
 student_validation.csv
+fail_to_find_file.txt
+fail_to_grade.txt
+final.zip
+grades.csv
 .DS_STORE
 __pycache__/
